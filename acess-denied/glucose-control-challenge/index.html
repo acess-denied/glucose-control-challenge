@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pop the Bubble Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+        }
+        #top-bar {
+            background-color: #4CAF50;
+            padding: 10px;
+            color: white;
+            text-align: center;
+            font-size: 24px;
+        }
+        #game-area {
+            width: 80%;
+            height: 400px;
+            margin: 20px auto;
+            position: relative;
+            background-color: #ffffff;
+            border: 2px solid #4CAF50;
+        }
+        .bubble {
+            width: 50px;
+            height: 50px;
+            background-color: #FF5733;
+            border-radius: 50%;
+            position: absolute;
+            cursor: pointer;
+        }
+        #glucose-meter {
+            margin: 20px auto;
+            text-align: center;
+        }
+        #controls {
+            text-align: center;
+            margin-top: 20px;
+        }
+        #game-over {
+            display: none;
+            text-align: center;
+            font-size: 28px;
+            color: red;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="top-bar">Pop the Bubble Game</div>
+    <div id="game-area"></div>
+    <div id="glucose-meter">Glucose Meter: <span id="glucose-level">100</span> mg/dL</div>
+    <div id="controls">
+        <button id="start-button">Start Game</button>
+        <button id="reset-button" style="display:none;">Reset Game</button>
+    </div>
+    <div id="game-over">Game Over! Your final glucose level: <span id="final-glucose-level"></span></div>
+
+    <script>
+        let score = 0;
+        let glucoseLevel = 100;
+        let gameArea = document.getElementById('game-area');
+        let glucoseDisplay = document.getElementById('glucose-level');
+        let gameOverDisplay = document.getElementById('game-over');
+        let finalGlucoseDisplay = document.getElementById('final-glucose-level');
+        let interval;
+
+        function startGame() {
+            score = 0;
+            glucoseLevel = 100;
+            glucoseDisplay.innerText = glucoseLevel;
+            gameOverDisplay.style.display = 'none';
+            document.getElementById('start-button').style.display = 'none';
+            document.getElementById('reset-button').style.display = 'inline';
+            spawnBubble();
+            interval = setInterval(updateGlucose, 2000);
+        }
+
+        function spawnBubble() {
+            let bubble = document.createElement('div');
+            bubble.classList.add('bubble');
+            bubble.style.top = Math.random() * (gameArea.offsetHeight - 50) + 'px';
+            bubble.style.left = Math.random() * (gameArea.offsetWidth - 50) + 'px';
+            bubble.onclick = function() {
+                score += 10;
+                glucoseLevel += 5;
+                glucoseDisplay.innerText = glucoseLevel;
+                gameArea.removeChild(bubble);
+                spawnBubble();
+            };
+            gameArea.appendChild(bubble);
+        }
+
+        function updateGlucose() {
+            glucoseLevel -= 2;
+            glucoseDisplay.innerText = glucoseLevel;
+            if (glucoseLevel <= 0) {
+                endGame();
+            }
+        }
+
+        function endGame() {
+            clearInterval(interval);
+            finalGlucoseDisplay.innerText = glucoseLevel;
+            gameOverDisplay.style.display = 'block';
+            document.getElementById('reset-button').style.display = 'none';
+        }
+
+        document.getElementById('start-button').onclick = startGame;
+        document.getElementById('reset-button').onclick = function() {
+            window.location.reload();
+        };
+    </script>
+</body>
+</html>
