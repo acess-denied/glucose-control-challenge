@@ -1,0 +1,333 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pop The Bubble – Glucose Control Challenge</title>
+
+<style>
+body{
+font-family:Arial, Helvetica, sans-serif;
+margin:0;
+background:linear-gradient(#e8f7ff,#ffffff);
+text-align:center;
+}
+
+header{
+background:#0b6e99;
+color:white;
+padding:10px;
+}
+
+#stats{
+display:flex;
+justify-content:center;
+gap:30px;
+font-weight:bold;
+margin-top:5px;
+}
+
+#gameArea{
+position:relative;
+height:65vh;
+border:2px solid #d0e7f5;
+margin:20px;
+border-radius:10px;
+overflow:hidden;
+background:#f5fbff;
+}
+
+.bubble{
+position:absolute;
+border-radius:50%;
+width:90px;
+height:90px;
+display:flex;
+align-items:center;
+justify-content:center;
+text-align:center;
+font-size:13px;
+font-weight:bold;
+cursor:pointer;
+box-shadow:0 6px 14px rgba(0,0,0,0.25);
+backdrop-filter: blur(2px);
+transition:transform 0.1s;
+}
+
+.bubble:hover{
+transform:scale(1.1);
+}
+
+.decrease{
+background:rgba(60,220,160,0.35);
+border:2px solid #27ae60;
+}
+
+.increase{
+background:rgba(255,120,120,0.35);
+border:2px solid #e74c3c;
+}
+
+#controls button{
+padding:10px 15px;
+margin:5px;
+font-size:14px;
+border:none;
+border-radius:6px;
+background:#0b6e99;
+color:white;
+cursor:pointer;
+}
+
+#glucoseBar{
+width:80%;
+height:20px;
+margin:10px auto;
+background:#eee;
+border-radius:10px;
+overflow:hidden;
+}
+
+#glucoseFill{
+height:100%;
+width:40%;
+background:green;
+transition:width 0.3s;
+}
+
+#popup{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.5);
+display:none;
+align-items:center;
+justify-content:center;
+}
+
+#popupContent{
+background:white;
+padding:20px;
+border-radius:10px;
+width:320px;
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+<h2>POP THE BUBBLE – Glucose Control Challenge</h2>
+<div id="stats">
+<div>Glucose: <span id="glucose">120</span> mg/dL</div>
+<div>Score: <span id="score">0</span></div>
+<div>Time: <span id="time">60</span>s</div>
+</div>
+</header>
+
+<div id="controls">
+<button onclick="startGame()">Start</button>
+<button onclick="pauseGame()">Pause</button>
+<button onclick="restartGame()">Restart</button>
+</div>
+
+<div id="gameArea"></div>
+
+<div id="glucoseBar">
+<div id="glucoseFill"></div>
+</div>
+
+<div id="popup">
+<div id="popupContent">
+<h3 id="popupTitle"></h3>
+<p id="popupText"></p>
+<button onclick="closePopup()">Close</button>
+</div>
+</div>
+
+<script>
+
+const bubbles=[
+{label:"Insulin",effect:-30,explanation:"GLUT4 mediated glucose uptake."},
+{label:"Glucagon",effect:25,explanation:"Stimulates hepatic glycogenolysis."},
+{label:"Exercise",effect:-20,explanation:"Muscle contraction increases glucose uptake."},
+{label:"Metformin",effect:-15,explanation:"Decreases hepatic gluconeogenesis."},
+{label:"Sugary drink",effect:40,explanation:"Rapid carbohydrate absorption."},
+{label:"Fiber food",effect:-5,explanation:"Slows glucose absorption."},
+{label:"Cortisol",effect:20,explanation:"Increases gluconeogenesis."},
+{label:"Adrenaline",effect:15,explanation:"Stimulates glycogen breakdown."},
+{label:"GLP-1 agonist",effect:-15,explanation:"Enhances insulin secretion."},
+{label:"SGLT2 inhibitor",effect:-20,explanation:"Renal glucose excretion."},
+{label:"Insulin resistance",effect:30,explanation:"Reduced insulin sensitivity."},
+{label:"High carb meal",effect:35,explanation:"Large glucose spike."},
+{label:"Fasting",effect:-10,explanation:"Lower glucose intake."},
+{label:"Ketone bodies",effect:10,explanation:"Seen in insulin deficiency."},
+{label:"Beta cell failure",effect:40,explanation:"Reduced insulin secretion."},
+{label:"Weight loss",effect:-10,explanation:"Improves insulin sensitivity."},
+{label:"Obesity",effect:20,explanation:"Promotes insulin resistance."},
+{label:"Stress",effect:15,explanation:"Raises cortisol and glucose."},
+{label:"Whole grains",effect:-5,explanation:"Lower glycemic load."},
+{label:"Sulfonylurea",effect:-20,explanation:"Stimulates insulin release."}
+];
+
+let glucose=120;
+let score=0;
+let time=60;
+let running=false;
+let gameInterval;
+let spawnInterval;
+let activeBubbles=[];
+
+function updateUI(){
+
+document.getElementById("glucose").innerText=Math.round(glucose);
+document.getElementById("score").innerText=score;
+document.getElementById("time").innerText=time;
+
+let percent=(glucose/400)*100;
+document.getElementById("glucoseFill").style.width=percent+"%";
+
+if(glucose<70)
+ document.getElementById("glucoseFill").style.background="blue";
+else if(glucose>140)
+ document.getElementById("glucoseFill").style.background="red";
+else
+ document.getElementById("glucoseFill").style.background="green";
+
+}
+
+function spawnBubble(){
+
+let data=bubbles[Math.floor(Math.random()*bubbles.length)];
+
+let bubble=document.createElement("div");
+bubble.className="bubble "+(data.effect<0?"decrease":"increase");
+bubble.innerText=data.label;
+
+let size=70+Math.random()*40;
+
+bubble.style.width=size+"px";
+bubble.style.height=size+"px";
+
+let x=Math.random()*80;
+let y=90;
+
+bubble.style.left=x+"%";
+bubble.style.top=y+"%";
+
+let vx=(Math.random()-0.5)*0.1;
+let vy=-0.05-Math.random()*0.05;
+
+let obj={el:bubble,x,y,vx,vy,data};
+activeBubbles.push(obj);
+
+bubble.onclick=function(){popBubble(obj)};
+
+document.getElementById("gameArea").appendChild(bubble);
+}
+
+function physicsLoop(){
+
+activeBubbles.forEach((b,i)=>{
+
+b.x+=b.vx;
+b.y+=b.vy;
+
+b.vx+= (Math.random()-0.5)*0.002;
+
+if(b.x<0||b.x>90) b.vx*=-1;
+
+b.el.style.left=b.x+"%";
+b.el.style.top=b.y+"%";
+
+if(b.y< -10){
+ b.el.remove();
+ activeBubbles.splice(i,1);
+}
+
+});
+
+requestAnimationFrame(physicsLoop);
+
+}
+
+function popBubble(b){
+
+let before = glucose;   // store glucose before effect
+
+b.el.remove();
+activeBubbles = activeBubbles.filter(x => x !== b);
+
+glucose += b.data.effect;
+
+if(b.data.effect < 0 && before > 140)
+    score += 10;
+
+else if(b.data.effect > 0 && before < 70)
+    score += 10;
+
+else if(before >= 70 && before <= 140)
+    score += 5;   // reward maintaining normal range
+
+else
+    score -= 2;   // small penalty instead of big negative
+
+showPopup(b.data);
+checkEnd();
+updateUI();
+}
+
+
+function showPopup(data){
+
+let p=document.getElementById("popup");
+p.style.display="flex";
+
+
+document.getElementById("popupTitle").innerText=data.label;
+
+
+document.getElementById("popupText").innerText=data.explanation+" (Effect "+data.effect+" mg/dL)";
+
+}
+
+function closePopup(){
+ document.getElementById("popup").style.display="none";
+}
+
+function checkEnd(){
+ if(glucose>300||glucose<40){
+  alert("Game Over – Critical glucose level");
+  restartGame();
+ }
+}
+
+function startGame(){
+ if(running) return;
+ running=true;
+
+ spawnInterval=setInterval(spawnBubble,1800);
+
+gameInterval=setInterval(()=>{
+  time--;
+
+  if(time<=0){
+    alert("Time Up! Score: " + score);
+    restartGame();
+  }
+
+  updateUI();
+
+},1000);
+
+physicsLoop();
+}
+updateUI();
+
+</script>
+</body>
+</html>
