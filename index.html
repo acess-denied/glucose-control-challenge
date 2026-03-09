@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Glucose Control Game</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; }
+        #top-bar { background-color: #4CAF50; color: white; padding: 10px; text-align: center; }
+        #game-area { width: 100%; height: 500px; border: 1px solid #ccc; position: relative; }
+        #controls { margin: 20px; }
+        #glucose-meter, #warning-box, #explanation-popup, #game-over { display: none; }
+    </style>
+</head>
+<body>
+    <div id="top-bar">
+        <h1>Glucose Control Game</h1>
+    </div>
+    
+    <div id="game-area">
+        <!-- Game elements will be dynamically added here -->
+    </div>
+
+    <div id="controls">
+        <button onclick="startGame()">Start Game</button>
+        <button onclick="showExplanation()">Explanation</button>
+    </div>
+
+    <div id="glucose-meter">
+        <h2>Glucose Level:</h2>
+        <p id="glucose-value">120 mg/dL</p>
+    </div>
+
+    <div id="warning-box">
+        <p id="warning-message">Warning: Glucose Level Too High!</p>
+    </div>
+
+    <div id="explanation-popup">
+        <p>This game simulates glucose control management. Manage your glucose levels wisely!</p>
+        <button onclick="closeExplanation()">Close</button>
+    </div>
+
+    <div id="game-over">
+        <h2>Game Over</h2>
+        <p>Your final score is: <span id="final-score">0</span></p>
+        <button onclick="restartGame()">Restart</button>
+    </div>
+
+    <script>
+        function startGame() {
+            // Logic to start the game
+            document.getElementById('game-area').innerHTML = '<p>Game is running...</p>';
+            document.getElementById('glucose-meter').style.display = 'block';
+        }
+
+        function showExplanation() {
+            document.getElementById('explanation-popup').style.display = 'block';
+        }
+
+        function closeExplanation() {
+            document.getElementById('explanation-popup').style.display = 'none';
+        }
+
+        function restartGame() {
+            // Logic to restart the game
+            document.getElementById('game-over').style.display = 'none';
+            startGame();
+        }
+
+        // Additional game logic for updating glucose levels, warning displays, etc. would go here
+    </script>
+</body>
+</html>
